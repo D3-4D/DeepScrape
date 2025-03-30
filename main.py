@@ -32,7 +32,8 @@ Containers = {}
 class Container:
     def __init__(self, ID, Cached=False, SegmentedRes=False, Debug=False, InternalInstruct=""):
         self.__LastM = 1
-        self.Instruct = "Make sure to respond solely with characters within the BMP range and carefully verify any emojis used. "+InternalInstruct
+        self.EndElement = "EOF" 
+        self.Instruct = InternalInstruct
         self.Cached = Cached
         self.SegmentedRes = SegmentedRes
         self.Debug = Debug
@@ -110,7 +111,7 @@ class Container:
             self.__LastM += 1
         else:
             self.EraseHistory()
-        yield "EOF"
+        yield self.EndElement
 
 if __name__ == "__main__":
     inst = "Keep responses brief. Use a natural, conversational tone and keep the dialogue flowing. Respond with another trivial question."
@@ -133,13 +134,12 @@ if __name__ == "__main__":
             L = ""
             print(f"[{co.ID}]: ",end="")
             for x in Strt:
-                if x == "EOF":
+                if x == co.EndElement:
                     break
                 L += x
                 print(x, end="")
             print()
-    except (KeyboardInterrupt, TimeoutError, EC.NoSuchElementException) as e:
+    except KeyboardInterrupt:
+        print("Execution completed.")
         driver.close()
-        print(e)
-        input("\nPress enter to exit.")
         raise SystemExit
