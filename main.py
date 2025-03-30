@@ -26,6 +26,7 @@ opt.add_argument("--disable-dev-shm-usage")
 opt.add_argument("--window-size=1920,1080")
 
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install(), log_output=devnull), options=opt)
+del opt
 
 Containers = {}
 
@@ -140,6 +141,6 @@ if __name__ == "__main__":
                 print(x, end="")
             print()
     except KeyboardInterrupt:
-        print("Execution completed.")
+        print("\nExecution completed.")
         driver.close()
         raise SystemExit
