@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
     Init = "How do bees fly?"
 
-    print(f"Conversation began:\n\n *{Init}*\n\n")
+    print(f"\nConversation began:\n\n *{Init}*\n\n")
 
     Switch = False
 
