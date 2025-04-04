@@ -33,8 +33,8 @@ Containers = {}
 class Container:
     def __init__(self, ID, Cached=False, SegmentedRes=False, Debug=False, InternalInstruct=""):
         self.__LastM = 1
-        self.EndElement = "EOF" 
-        self.Instruct = InternalInstruct
+        self.EndStream = "EOF" 
+        self.Instruct = "Append EOF at the end of your response."+InternalInstruct
         self.Cached = Cached
         self.SegmentedRes = SegmentedRes
         self.Debug = Debug
@@ -77,11 +77,7 @@ class Container:
         if self.Debug:
             print("Processing request.")
 
-        inp = Wait(driver, 5).until(
-            EC.presence_of_all_elements_located((By.CLASS_NAME, "chatbox"))
-        )
-        leng = len(inp)
-        inp = inp[-1]
+        inp = driver.find_element(By.ID, "persistentChatbox")
         driver.execute_script("""var elm = arguments[0], txt = arguments[1];
         elm.value += txt;
         elm.dispatchEvent(new Event('change'));""", inp, Request)
@@ -102,17 +98,28 @@ class Container:
             print("Scroll applied.")
         response = response.find_element(By.XPATH, ".//div[@class='markdownContainer']")
         c = 0
-        while len(driver.find_elements(By.CLASS_NAME, "chatbox")) == leng:
+        buffer = ""
+        while not "EOF" in response.text:
             sleep(.05)
-            if self.SegmentedRes and len(response.text) > c:
-                yield response.text[c:]
-                c = len(response.text)
-        yield response.text[c:]
+            if self.SegmentedRes:
+                buffer = ""
+                for _ in range(5):
+                    sleep(.05)
+                    if len(response.text) > c:
+                        if not "EOF" in response.text[c:]:
+                            buffer += response.text[c:]
+                            c = len(response.text)
+                        else:
+                            yield buffer
+                            break
+                if not "EOF" in buffer and buffer != "":
+                    yield buffer
+        yield response.text[c:-3]
         if self.Cached:
             self.__LastM += 1
         else:
             self.EraseHistory()
-        yield self.EndElement
+        yield self.EndStream
 
 if __name__ == "__main__":
     inst = "Keep responses brief. Use a natural, conversational tone and keep the dialogue flowing. Respond with another trivial question."
@@ -135,7 +142,7 @@ if __name__ == "__main__":
             L = ""
             print(f"[{co.ID}]: ",end="")
             for x in Strt:
-                if x == co.EndElement:
+                if x == co.EndStream:
                     break
                 L += x
                 print(x, end="")
