@@ -103,16 +103,19 @@ class Container:
             sleep(.05)
             if self.SegmentedRes:
                 buffer = ""
-                for _ in range(5):
-                    sleep(.05)
+                lastc = c
+                for _ in range(3):
+                    sleep(.01)
                     if len(response.text) > c:
                         if not "EOF" in response.text[c:]:
-                            buffer += response.text[c:]
-                            c = len(response.text)
+                            lenc = len(response.text)
+                            buffer += response.text[c:lenc]
+                            c = lenc
                         else:
-                            yield buffer
+                            buffer = ""
+                            c = lastc
                             break
-                if not "EOF" in buffer and buffer != "":
+                if buffer != "":
                     yield buffer
         yield response.text[c:-3]
         if self.Cached:
@@ -146,7 +149,8 @@ if __name__ == "__main__":
                     break
                 L += x
                 print(x, end="")
-            print()
+                sleep(.1)
+            print("\n")
     except KeyboardInterrupt:
         print("\nExecution completed.")
         driver.close()
