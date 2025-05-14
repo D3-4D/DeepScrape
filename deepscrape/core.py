@@ -12,8 +12,8 @@ from time import sleep
 opt = Options()
 
 opt.page_load_strategy = "eager"
-opt.add_argument("--headless=new")
 opt.add_argument('--ignore-certificate-errors')
+opt.add_argument('headless')
 opt.add_argument("--log-level=3")
 
 opt.add_experimental_option("prefs", {
@@ -49,7 +49,7 @@ class Container:
         
         Containers[self.ID] = dict(Cached=Cached,SegmentedRes=SegmentedRes,Debug=Debug) if Debug else True
 
-    def __del__(self):
+    def __del(self):
         Containers.pop(self.ID)
 
         self.__Switch()
@@ -59,7 +59,7 @@ class Container:
             print(f"Container '{self.ID}' was removed.")
 
     def __Switch(self):
-        if driver.current_window_handle != self.Tab:
+        if driver.current_window_handle != self.Tab: #!
             driver.switch_to.window(self.Tab)
             if self.Debug:
                 print(f"Switching to tab {self.Tab}.")
@@ -72,16 +72,19 @@ class Container:
 
     def Request(self, Request):
         self.__Switch()
-        Request = f"{self.Instruct}{Request}".replace("\n", "")
+        Request = f"{self.Instruct}{Request}".replace("\n", "").replace("\n", ";")
 
         if self.Debug:
             print("Processing request.")
 
         inp = driver.find_element(By.ID, "persistentChatbox")
-        driver.execute_script("""var elm = arguments[0], txt = arguments[1];
-        elm.value += txt;
-        elm.dispatchEvent(new Event('change'));""", inp, Request)
-        inp.send_keys("\n")
+        
+        #appear not to be working
+        #driver.execute_script("""var elm = arguments[0], txt = arguments[1];
+        #elm.value += txt\\n;
+        #elm.dispatchEvent(new Event('change'));""", inp, Request)
+        
+        inp.send_keys(f"{Request}\n")
         response = Wait(driver, 20).until(
             EC.presence_of_all_elements_located((By.XPATH, "//div[@class='outputBox']"))
         )
@@ -123,4 +126,3 @@ class Container:
         else:
             self.EraseHistory()
         yield self.EndStream
-      
